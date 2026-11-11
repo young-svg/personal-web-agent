@@ -1,0 +1,157 @@
+{
+  "synthetic": true,
+  "source": "Original contract fixture written for P4-D; not captured HTML, JS, or live website evidence.",
+  "page": {
+    "url": "https://job-boards.greenhouse.io/sertis/jobs/7847750002",
+    "title": "Job Application for Synthetic Test Role at Fictional Test Company",
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "Synthetic Test Role"
+      }
+    ],
+    "forms": [
+      {
+        "id": "application-form"
+      }
+    ],
+    "controls": [
+      {
+        "id": "synthetic_aux",
+        "tag": "INPUT",
+        "type": "hidden",
+        "label": "",
+        "visible": false
+      },
+      {
+        "id": "first_name",
+        "tag": "INPUT",
+        "type": "text",
+        "label": "First name",
+        "visible": true,
+        "required": true
+      },
+      {
+        "id": "last_name",
+        "tag": "INPUT",
+        "type": "text",
+        "label": "Last name",
+        "visible": true,
+        "required": true
+      },
+      {
+        "id": "email",
+        "tag": "INPUT",
+        "type": "email",
+        "label": "Email",
+        "visible": true,
+        "required": true
+      },
+      {
+        "id": "country",
+        "tag": "INPUT",
+        "type": "text",
+        "label": "Country",
+        "visible": true,
+        "required": true,
+        "role": "combobox",
+        "react_options": [
+          {
+            "label": "Synthetic Country CN",
+            "value": "cn"
+          },
+          {
+            "label": "Synthetic Country ZZ",
+            "value": "zz"
+          }
+        ]
+      },
+      {
+        "id": "phone",
+        "tag": "INPUT",
+        "type": "tel",
+        "label": "Phone",
+        "visible": true,
+        "required": true
+      },
+      {
+        "id": "resume",
+        "tag": "INPUT",
+        "type": "file",
+        "label": "Resume/CV",
+        "visible": true,
+        "required": true,
+        "context": "Resume/CV",
+        "accept": ".pdf"
+      },
+      {
+        "id": "question_synthetic_visa",
+        "tag": "INPUT",
+        "type": "text",
+        "label": "Do you need a visa and work permit sponsorship?",
+        "visible": true,
+        "required": true,
+        "role": "combobox",
+        "react_options": [
+          {
+            "label": "Yes",
+            "value": "1"
+          },
+          {
+            "label": "No",
+            "value": "0"
+          }
+        ]
+      },
+      {
+        "id": "question_synthetic_start",
+        "tag": "INPUT",
+        "type": "text",
+        "label": "When can you start working as intern in 2026?",
+        "visible": true,
+        "required": true
+      },
+      {
+        "id": "question_synthetic_duration",
+        "tag": "INPUT",
+        "type": "text",
+        "label": "How long/how many months can you work as an intern in 2026?",
+        "visible": true,
+        "required": true
+      },
+      {
+        "id": "linkedin",
+        "tag": "INPUT",
+        "type": "text",
+        "label": "LinkedIn profile",
+        "visible": true,
+        "required": false
+      },
+      {
+        "id": "website",
+        "tag": "INPUT",
+        "type": "text",
+        "label": "Website",
+        "visible": true,
+        "required": false
+      },
+      {
+        "id": "cover_letter",
+        "tag": "INPUT",
+        "type": "file",
+        "label": "Cover letter",
+        "visible": true,
+        "required": false,
+        "context": "Cover letter",
+        "accept": ".pdf"
+      },
+      {
+        "id": "synthetic_submit",
+        "tag": "BUTTON",
+        "type": "submit",
+        "text": "Submit application",
+        "visible": true
+      }
+    ]
+  }
+}

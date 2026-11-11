@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>本地招聘申请测试表单</title>
+<style>
+body { max-width: 720px; margin: 32px auto; padding: 0 20px; font: 16px/1.6 system-ui, sans-serif; color: #182a35; }
+h1 { font-size: 26px; } nav a { margin-right: 12px; } .field { margin: 18px 0; }
+label { display: block; font-weight: 600; } input:not([type=file]), textarea { box-sizing: border-box; width: 100%; padding: 8px; font: inherit; }
+textarea { min-height: 100px; } button { padding: 8px 20px; font: inherit; cursor: pointer; }
+[data-state=success] { color: #126735; } [data-state=failure] { color: #a21b1b; }
+aside { padding: 12px; background: #edf2f5; } #receipt { white-space: pre-wrap; }
+</style>
+<h1>本地招聘申请测试表单</h1>
+<p>仅使用虚构资料和测试 PDF。上传与最终提交是两个独立事件。</p>
+<nav aria-label="测试模式">
+  <a href="/">正常模式</a><a href="/?order=reordered">字段换序</a><a href="/?upload=fail">模拟上传失败</a>
+</nav>
+<p>字段模式：<strong>{{ORDER}}</strong></p>
+<form id="application" method="post" action="/api/submit">
+{{FIELDS}}
+<input id="upload-id" name="upload_id" type="hidden" value="">
+<button id="submit" type="submit">Submit</button>
+</form>
+<p id="receipt" role="status" aria-live="polite" data-state="idle">尚未提交</p>
+<p id="attempt-status" role="status" aria-live="polite"></p>
+<aside aria-label="测试计数">
+  上传请求：<span id="upload-count">0</span>；提交尝试：<span id="submit-count">0</span>；成功提交：<span id="success-count">0</span>；
+  最终状态：<span id="final-status">NOT_SUBMITTED</span>
+  <p><a href="/api/state" target="_blank">查看服务器测试状态 JSON</a></p>
+  <p>提交授权和重置仅通过本地测试 CLI 控制。</p>
+</aside>
+<script>
+const form = document.querySelector('#application');
+const fileInput = document.querySelector('#resume');
+const uploadStatus = document.querySelector('#upload-status');
+const uploadId = document.querySelector('#upload-id');
+const submitButton = document.querySelector('#submit');
+const receipt = document.querySelector('#receipt');
+let uploadSequence = 0;
+let submitting = false;
+function show(node, state, text) { node.dataset.state = state; node.textContent = text; }
+async function refreshState() {
+  const state = await (await fetch('/api/state', {cache: 'no-store'})).json();
+  document.querySelector('#upload-count').textContent = state.upload_count;
+  document.querySelector('#submit-count').textContent = state.submit_count;
+  document.querySelector('#success-count').textContent = state.successful_submit_count;
+  document.querySelector('#final-status').textContent = state.final_status;
+}
+fileInput.addEventListener('change', async () => {
+  const sequence = ++uploadSequence;
+  uploadId.value = '';
+  const file = fileInput.files[0];
+  if (!file) { show(uploadStatus, 'idle', '尚未上传'); return; }
+  submitButton.disabled = true;
+  show(uploadStatus, 'pending', '正在上传，等待服务器确认…');
+  try {
+    const data = new FormData(); data.append('resume', file);
+    const response = await fetch('{{UPLOAD_ENDPOINT}}', {method: 'POST', body: data});
+    const result = await response.json();
+    if (sequence !== uploadSequence) return;
+    if (!response.ok || !result.success) throw new Error(result.error || '服务器拒绝上传');
+    uploadId.value = result.upload_id;
+    show(uploadStatus, 'success', `上传成功：${result.filename}（${result.size} 字节，服务器已确认）`);
+  } catch (error) {
+    if (sequence === uploadSequence) show(uploadStatus, 'failure', `上传失败：${error.message}`);
+  } finally {
+    if (sequence === uploadSequence) submitButton.disabled = false;
+    await refreshState();
+  }
+});
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (submitting) return;
+  submitting = true; submitButton.disabled = true;
+  const priorSuccess = receipt.dataset.state === 'success';
+  const attemptStatus = document.querySelector('#attempt-status');
+  if (!priorSuccess) show(receipt, 'pending', '正在提交，等待服务器回执…');
+  try {
+    const data = new FormData(form); data.delete('resume');
+    const response = await fetch('/api/submit', {method: 'POST', body: data});
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || '提交被拒绝');
+    show(receipt, 'success', `提交成功\n回执编号：${result.submission_id}\n状态：${result.status}`);
+    receipt.dataset.submissionId = result.submission_id;
+  } catch (error) { show(priorSuccess ? attemptStatus : receipt, 'failure', `提交失败：${error.message}`); }
+  finally { submitting = false; submitButton.disabled = false; await refreshState(); }
+});
+refreshState();
+</script>
+</html>

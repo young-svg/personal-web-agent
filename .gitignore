@@ -1,0 +1,26 @@
+.venv/
+.local/
+.env
+.env.*
+!.env.example
+private/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.DS_Store
+.pytest_cache/
+.ruff_cache/
+*.log
+
+# Internal execution evidence stays local; public usage lives in README/DEVELOPMENT_PLAN.
+/P*_REPORT.md
+# Raw third-party capture retained for private historical evidence only.
+/tests/snapshots/greenhouse_sertis.json
+# Historical live-site probes/diagnostics are not public quickstart tools.
+/scripts/diagnose_csdn_indices.py
+/scripts/diagnose_csdn_preflight.py
+/scripts/inspect_edge_csdn.py
+/scripts/inspect_greenhouse.py
+/scripts/probe_edge.py

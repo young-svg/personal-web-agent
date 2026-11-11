@@ -1,0 +1,19 @@
+{
+  "evidence_type": "synthetic structural snapshot based on P3-C1; not a real write test",
+  "pages": [{
+    "location": "https://editor.csdn.net/md/",
+    "controls": [
+      {"tag": "INPUT", "classes": "article-bar__title article-bar__title--input text-input", "visible": false},
+      {"tag": "PRE", "classes": "editor__inner markdown-highlighting", "contenteditable": "true", "visible": true},
+      {"tag": "INPUT", "type": "file", "id": "import-markdown-file-input", "accept": ".md", "visible": true},
+      {"tag": "INPUT", "type": "file", "classes": "cfw-file-input", "accept": "image/*,.png,.jpg", "visible": false}
+    ],
+    "entries": [
+      {"tag": "BUTTON", "text": "Markdown"},
+      {"tag": "BUTTON", "text": "预览"},
+      {"tag": "BUTTON", "text": "保存草稿"},
+      {"tag": "BUTTON", "text": "发布文章"}
+    ],
+    "draft_status_text": "填写标题才可自动保存"
+  }]
+}

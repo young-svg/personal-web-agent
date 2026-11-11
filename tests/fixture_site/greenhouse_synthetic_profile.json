@@ -1,0 +1,14 @@
+{
+  "synthetic": true,
+  "local_user_id": "fixture-user-01",
+  "values": {
+    "first_name": "Fictional",
+    "last_name": "Candidate",
+    "email": "fixture@example.invalid",
+    "country": "cn",
+    "phone": "00000000000",
+    "visa_sponsorship": "Yes",
+    "intern_start": "2026-12-01 (fictional test only)",
+    "intern_duration": "3 months (fictional test only)"
+  }
+}

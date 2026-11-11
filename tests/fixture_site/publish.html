@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>本地图文发布测试</title>
+<style>
+body { max-width: 850px; margin: 32px auto; padding: 0 20px; font: 16px/1.6 system-ui, sans-serif; color: #182a35; }
+label { display: block; font-weight: 600; margin-top: 18px; }
+input:not([type=file]), textarea { width: 100%; box-sizing: border-box; padding: 10px; font: inherit; }
+textarea { min-height: 180px; } button { padding: 9px 18px; margin: 14px 10px 0 0; font: inherit; }
+nav a { margin-right: 12px; } aside, section { background: #f0f4f6; padding: 18px; margin: 20px 0; }
+[data-state=success] { color: #126735; } [data-state=failure] { color: #a21b1b; }
+#preview-body { white-space: pre-wrap; } #preview-images img { max-width: 220px; max-height: 160px; margin: 6px; }
+</style>
+<h1>本地图文发布测试</h1>
+<p>仅用合成文章与测试图片。选择图片会立即上传到本地服务器；预览不保存，保存草稿不发布。</p>
+<nav><a href="/publish/">正常上传</a><a href="/publish/?upload=fail">上传失败模式</a><a href="/">招聘测试页</a></nav>
+<form id="publish-form" action="/api/publish/publish" method="post">
+  <label for="article-title">文章标题（必填）</label>
+  <input id="article-title" name="title" aria-required="true" maxlength="200" autocomplete="off">
+  <label for="article-body">正文（必填，纯文本）</label>
+  <textarea id="article-body" name="body" aria-required="true" maxlength="10000"></textarea>
+  <label for="images">图片（必填，1–5 张 PNG/JPEG，每张最多 2 MiB，逐次选择会追加）</label>
+  <input id="images" name="images" type="file" aria-required="true" multiple accept=".png,.jpg,.jpeg,image/png,image/jpeg">
+  <input id="image-ids" type="hidden" value="[]">
+  <input id="draft-id" name="draft_id" type="hidden" value="">
+  <p id="image-upload-status" role="status" aria-live="polite" data-state="idle">尚未上传图片</p>
+  <button id="save-draft" type="button">保存草稿</button>
+  <button id="publish" type="submit">Publish</button>
+</form>
+<p id="draft-status" role="status" aria-live="polite" data-state="idle">尚未保存草稿</p>
+<section aria-label="内容预览">
+  <h2>内容预览</h2><p>当前编辑内容的本地预览，不代表已保存或已发布。</p>
+  <h3 id="preview-title"></h3><div id="preview-body"></div><div id="preview-images"></div>
+</section>
+<p id="publish-receipt" role="status" aria-live="polite" data-state="idle">尚未发布</p>
+<p id="publish-attempt-status" role="status" aria-live="polite"></p>
+<a id="article-link" hidden>查看已发布文章</a>
+<aside aria-label="服务器计数">
+图片上传请求 <span id="image-upload-count">0</span>；草稿保存尝试 <span id="draft-save-count">0</span>；
+发布尝试 <span id="publish-attempt-count">0</span>；成功发布 <span id="publish-success-count">0</span>；
+最终状态 <span id="publish-final-status">NOT_PUBLISHED</span>。
+<p><a href="/api/publish/state" target="_blank">查看图文测试状态 JSON</a></p>
+<p>授权/取消/重置通过现有本地控制 CLI；页面不提供授权凭据或授权按钮。</p>
+</aside>
+<script>
+const titleInput = document.querySelector('#article-title'), bodyInput = document.querySelector('#article-body');
+const imagesInput = document.querySelector('#images'), imageIds = document.querySelector('#image-ids');
+const draftId = document.querySelector('#draft-id'), saveButton = document.querySelector('#save-draft');
+const publishButton = document.querySelector('#publish'), receipt = document.querySelector('#publish-receipt');
+let images = [], sequence = 0, busy = false, edited = false;
+function show(id, state, text) { const node = document.querySelector(id); node.dataset.state = state; node.textContent = text; }
+function preview() {
+  document.querySelector('#preview-title').textContent = titleInput.value;
+  document.querySelector('#preview-body').textContent = bodyInput.value;
+  const target = document.querySelector('#preview-images'); target.replaceChildren();
+  images.forEach(item => { const img = document.createElement('img'); img.src = item.url; img.alt = item.filename; target.append(img); });
+}
+function changed() { edited = true; draftId.value = ''; show('#draft-status', 'idle', '内容已变化，请显式保存草稿'); preview(); }
+function lock(value) { busy = value; saveButton.disabled = value; publishButton.disabled = value; }
+async function state() {
+  const response = await fetch('/api/publish/state', {cache: 'no-store'});
+  if (!response.ok) throw new Error('状态查询失败');
+  const value = await response.json();
+  for (const [id, key] of [['image-upload-count','upload_request_count'],['draft-save-count','draft_save_count'],
+      ['publish-attempt-count','publish_attempt_count'],['publish-success-count','successful_publish_count'],['publish-final-status','final_status']])
+    document.getElementById(id).textContent = value[key];
+  return value;
+}
+titleInput.addEventListener('input', changed); bodyInput.addEventListener('input', changed);
+imagesInput.addEventListener('change', async () => {
+  const current = ++sequence; changed();
+  if (!imagesInput.files.length) { show('#image-upload-status', 'idle', '尚未上传图片'); return; }
+  lock(true); show('#image-upload-status', 'pending', '正在上传，等待服务器确认…');
+  try {
+    const data = new FormData(); for (const file of imagesInput.files) data.append('images', file);
+    const response = await fetch('{{UPLOAD_ENDPOINT}}', {method: 'POST', body: data});
+    const result = await response.json(); if (current !== sequence) return;
+    if (!response.ok || !result.success) throw new Error(result.error || '图片上传失败');
+    images = [...images, ...result.images]; imageIds.value = JSON.stringify(images.map(x => x.image_id)); preview();
+    show('#image-upload-status', 'success', `服务器确认上传成功：${images.length} 张图片；请求 ID ${result.upload_id}`);
+  } catch (error) { if (current === sequence) { images = []; imageIds.value = '[]'; preview(); show('#image-upload-status', 'failure', `上传失败：${error.message}`); } }
+  finally { if (current === sequence) lock(false); await state(); }
+});
+saveButton.addEventListener('click', async () => {
+  if (busy) return; lock(true);
+  // Capture the version that is actually sent; later edits remain dirty.
+  const payload = {title: titleInput.value, body: bodyInput.value, image_ids: JSON.parse(imageIds.value)};
+  draftId.value = '';
+  try {
+    const response = await fetch('/api/publish/draft', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || '草稿保存失败');
+    if (payload.title === titleInput.value && payload.body === bodyInput.value && JSON.stringify(payload.image_ids) === imageIds.value) {
+      draftId.value = result.draft_id; show('#draft-status', 'success', `草稿已保存：${result.draft_id}；尚未发布`);
+    } else show('#draft-status', 'idle', '保存期间内容已变化，请重新保存');
+  } catch (error) { show('#draft-status', 'failure', error.message); }
+  finally { lock(false); await state(); }
+});
+document.querySelector('#publish-form').addEventListener('submit', async event => {
+  event.preventDefault(); if (busy) return; lock(true);
+  const priorSuccess = receipt.dataset.state === 'success';
+  try {
+    const response = await fetch('/api/publish/publish', {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({draft_id: draftId.value})});
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || '发布被拒绝');
+    show('#publish-receipt', 'success', `发布成功；文章 ID：${result.article_id}；URL：${result.url}`);
+    receipt.dataset.articleId = result.article_id;
+    const link = document.querySelector('#article-link'); link.href = result.url; link.hidden = false;
+  } catch (error) { show(priorSuccess ? '#publish-attempt-status' : '#publish-receipt', 'failure', `发布失败：${error.message}`); }
+  finally { lock(false); await state(); }
+});
+state().then(value => {
+  if (!value.draft || edited || busy) return;
+  // Restore explicitly saved content on reload; no network write or autosave.
+  titleInput.value = value.draft.title; bodyInput.value = value.draft.body; imageIds.value = JSON.stringify(value.draft.image_ids);
+  images = value.uploads.filter(u => u.success).flatMap(u => u.images).filter(i => value.draft.image_ids.includes(i.image_id));
+  draftId.value = value.draft.draft_id; preview();
+  show('#draft-status', 'success', `已读取保存的草稿：${value.draft.draft_id}`);
+}).catch(error => show('#draft-status', 'failure', error.message));
+</script>
+</html>
