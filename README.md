@@ -1,6 +1,6 @@
 # Personal Web Agent
 
-基于 DeepSeek 与 browser-use 的本地网页任务 Agent：在可见浏览器中准备求职表单和图文内容，将最终提交交还用户。
+基于 DeepSeek 与 browser-use 的本地网页自动化 Agent 工程原型，通过求职表单和图文发布两个可控测试场景，验证自主执行、结果核验、人工接管及任务状态管理。
 
 ## Overview
 
