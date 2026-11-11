@@ -17,6 +17,14 @@
 
 两条流程在本地 fixture 使用合成资料、文章及图片。不会自动生成申请经历或改写用户提供的文章，也不会代替用户执行最终提交或发布。
 
+## Demo
+
+![本地招聘 fixture：真实 Agent 填写、PDF 上传与真人提交回执](docs/assets/apply-demo.gif)
+
+演示基于本地合成招聘 fixture：DeepSeek + browser-use 准备表单，Agent 停止后由用户本人确认并点击 Submit。GIF 按真实页面截图顺序制作、压缩等待时长，并非连续录屏；CLI 人工确认不在画面中显示。**不代表真实招聘平台投递成功。**
+
+画面保留了本轮 **3 次提交尝试、1 次成功**：未授权及重复点击被 fixture 拒绝，因此成功回执与拒绝提示会同时保留。这一保护仅属于本地测试站。[查看静态回执截图](docs/assets/apply-demo-receipt.png)。
+
 ## Architecture
 
 ```mermaid
