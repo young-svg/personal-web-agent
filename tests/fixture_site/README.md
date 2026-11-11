@@ -50,7 +50,7 @@ PYTHONPATH=tests .venv/bin/python -m fixture_site.lifecycle_check
 当前浏览器检查输出 `.local/p1-c1-fixture-browser-result.json`，生命周期结果 `.local/p1-c1-lifecycle.json`；
 测试结束自动关闭服务和测试浏览器。内部报告与旧记录仅留本地，不随公开源码分发；当前保护规则以上述说明为准。
 
-完整真人步骤见根目录 [README](../../README.md#人工确认状态与防重复)。真实接管使用已有 apply-prepare 加 --handoff；
+完整真人步骤见根目录 [README](../../docs/USAGE.md#handoff)。真实接管使用已有 apply-prepare 加 --handoff；
 不要用自动点击、管道批准或 HTTP 测试冒充真人。prepare_check.py 仍可用于 P1-B 三场景真实模型回归，会消耗额度，
 本轮没有重复运行该付费套件。
 
